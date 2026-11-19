@@ -1,0 +1,55 @@
+name: Build Creatio package
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: [self-hosted, Linux, X64, creatio-lab]
+    timeout-minutes: 10
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Check build tools
+        run: |
+          set -euo pipefail
+          python3 --version
+          node --version
+
+      - name: Verify base package
+        working-directory: package-base
+        run: sha256sum --check --strict SHA256SUMS
+
+      - name: Build installation package
+        run: |
+          set -euo pipefail
+          python3 tools/build-package.py \
+            --project "$GITHUB_WORKSPACE" \
+            --base package-base/original-export.zip \
+            --output build/ci
+
+      - name: Verify output checksum
+        working-directory: build/ci
+        run: sha256sum --check --strict SHA256SUMS
+
+      - name: Upload package and build report
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: order-calculator-${{ github.run_number }}
+          path: |
+            build/ci/UsrOrderCalculator-1.0.1.zip
+            build/ci/SHA256SUMS
+            build/ci/build-report.json
+          if-no-files-found: error
+          retention-days: 3
