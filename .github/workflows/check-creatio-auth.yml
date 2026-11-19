@@ -1,0 +1,63 @@
+name: Check Creatio authentication
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  authentication:
+    runs-on: [self-hosted, Linux, X64, creatio-lab]
+    timeout-minutes: 5
+
+    steps:
+      - name: Verify Creatio login
+        shell: bash
+        env:
+          CREATIO_RUNTIME_USERNAME: ${{ secrets.CREATIO_RUNTIME_USERNAME }}
+          CREATIO_RUNTIME_PASSWORD: ${{ secrets.CREATIO_RUNTIME_PASSWORD }}
+        run: |
+          set +x
+          set -euo pipefail
+          umask 077
+
+          test -n "$CREATIO_RUNTIME_USERNAME"
+          test -n "$CREATIO_RUNTIME_PASSWORD"
+
+          export CLIO_HOME
+          CLIO_HOME=$(mktemp -d "$RUNNER_TEMP/creatio-clio-auth.XXXXXX")
+          trap 'rm -rf -- "$CLIO_HOME"' EXIT
+
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          settings = {
+              "environments": {
+                  "creatio-lab": {
+                      "Uri": "https://creatio.creatio.test",
+                      "Login": os.environ["CREATIO_RUNTIME_USERNAME"],
+                      "Password": os.environ["CREATIO_RUNTIME_PASSWORD"],
+                      "IsNetCore": True,
+                      "Maintainer": "Customer"
+                  }
+              },
+              "autoupdate": {
+                  "clio": {"enabled": False},
+                  "knowledge": {"enabled": False},
+                  "toolkit": {"enabled": False}
+              }
+          }
+
+          path = Path(os.environ["CLIO_HOME"]) / "appsettings.json"
+          with path.open("x") as stream:
+              json.dump(settings, stream)
+          path.chmod(0o600)
+          print("Temporary clio configuration created; credentials hidden.")
+          PY
+
+          "$HOME/Desktop/creatio-tools/clio" reg-web-app creatio-lab \
+            --IsNetCore true \
+            --check-login
