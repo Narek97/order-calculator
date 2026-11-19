@@ -20,7 +20,7 @@ jobs:
   deploy:
     if: github.ref == 'refs/heads/main'
     runs-on: [self-hosted, Linux, X64, creatio-lab]
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     defaults:
       run:
@@ -108,6 +108,17 @@ jobs:
             rollout status statefulset/creatio-runtime-design \
             --timeout=180s
 
+      - name: Check promotion access
+        env:
+          CONTROL_PLANE_CLIENT_ID: ${{ secrets.CONTROL_PLANE_CLIENT_ID }}
+          CONTROL_PLANE_CLIENT_SECRET: ${{ secrets.CONTROL_PLANE_CLIENT_SECRET }}
+          CUSTOMIZATION_VERSION: order-calculator-${{ github.run_id }}-${{ github.run_attempt }}
+          SOURCE_BUILD_RUN_ID: ${{ steps.source.outputs.run_id }}
+        run: |
+          set -euo pipefail
+          python3 scripts/promote-creatio-customization.py \
+            --customization-version "$CUSTOMIZATION_VERSION"
+
       - name: Install package on Design
         env:
           CREATIO_RUNTIME_USERNAME: ${{ secrets.CREATIO_RUNTIME_USERNAME }}
@@ -123,3 +134,14 @@ jobs:
           kubectl --context=creatio-lab -n creatio-control-plane \
             rollout status statefulset/creatio-runtime-design \
             --timeout=600s
+
+      - name: Publish, activate and verify Workers
+        env:
+          CONTROL_PLANE_CLIENT_ID: ${{ secrets.CONTROL_PLANE_CLIENT_ID }}
+          CONTROL_PLANE_CLIENT_SECRET: ${{ secrets.CONTROL_PLANE_CLIENT_SECRET }}
+          CUSTOMIZATION_VERSION: order-calculator-${{ github.run_id }}-${{ github.run_attempt }}
+          SOURCE_BUILD_RUN_ID: ${{ steps.source.outputs.run_id }}
+        run: |
+          set -euo pipefail
+          python3 scripts/promote-creatio-customization.py \
+            --customization-version "$CUSTOMIZATION_VERSION" --apply
