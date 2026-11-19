@@ -1,0 +1,32 @@
+name: Check Creatio lab
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: [self-hosted, Linux, X64, creatio-lab]
+    timeout-minutes: 5
+
+    steps:
+      - name: Check tools and cluster access
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Runner user: $(whoami)"
+          command -v git python3 node docker kubectl minikube
+          python3 --version
+          node --version
+
+          docker info --format 'Docker: {{.ServerVersion}}'
+
+          kubectl --context=creatio-lab --request-timeout=15s \
+            get nodes
+
+          kubectl --context=creatio-lab --request-timeout=15s \
+            -n creatio-control-plane \
+            get pods -l app.kubernetes.io/instance=creatio-runtime
