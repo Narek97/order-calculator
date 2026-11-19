@@ -1,0 +1,17 @@
+{
+  "applicationName": "Order calculator",
+  "applicationCode": "UsrOrderCalculator",
+  "packageName": "UsrOrderCalculator",
+  "navigation": {"workplace": "My applications", "after": "Test app"},
+  "form": [
+    {"title": "Name", "existing": true},
+    {"title": "Quantity", "code": "UsrQuantity", "format": "Integer", "required": true},
+    {"title": "Unit price", "code": "UsrUnitPrice", "format": "Decimal (0.01)", "required": true},
+    {"title": "Total", "code": "UsrTotal", "format": "Decimal (0.01)", "readonly": true},
+    {"title": "Calculation message", "code": "UsrCalculationMessage", "format": "Text (250 characters)", "readonly": true}
+  ],
+  "button": {"caption": "Calculate", "request": "usr.CalculateOrderRequest"},
+  "serviceSchema": "UsrOrderCalculatorService",
+  "clientModule": "UsrOrderCalculatorClient",
+  "example": {"quantity": 3, "unitPrice": 1250.50, "expectedTotal": 3751.50}
+}
