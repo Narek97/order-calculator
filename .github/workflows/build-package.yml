@@ -48,7 +48,7 @@ jobs:
         with:
           name: order-calculator-${{ github.run_number }}
           path: |
-            build/ci/UsrOrderCalculator-1.0.1.zip
+            build/ci/UsrOrderCalculator-1.0.2.zip
             build/ci/SHA256SUMS
             build/ci/build-report.json
           if-no-files-found: error

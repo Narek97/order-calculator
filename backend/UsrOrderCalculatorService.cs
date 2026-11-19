@@ -42,17 +42,20 @@ namespace Terrasoft.Configuration
             }
             return new UsrOrderCalculatorResult {
                 Success = true,
-                Message = "Calculated on the Creatio .NET server.",
-                Total = decimal.Round(quantity * unitPrice, 2,
+                Message = quantity >= 10
+                    ? "Release 1.0.2: 10% discount applied."
+                    : "Release 1.0.2: order calculated without discount.",
+                Total = decimal.Round(
+                    quantity * unitPrice * (quantity >= 10 ? 0.90m : 1m), 2,
                     MidpointRounding.AwayFromZero),
-                Version = "1.0.0"
+                Version = "1.0.2"
             };
         }
 
         private static UsrOrderCalculatorResult Failure(string message)
         {
             return new UsrOrderCalculatorResult {
-                Success = false, Message = message, Total = 0m, Version = "1.0.0"
+                Success = false, Message = message, Total = 0m, Version = "1.0.2"
             };
         }
     }

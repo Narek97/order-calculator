@@ -129,7 +129,7 @@ def build(project,archive,out):
     patched=patch_page(source,client)
     files[page_path]=patched.encode()
     app=json.loads(files['Files/app-descriptor.json'].decode('utf-8-sig'))
-    app['Version']='1.0.1'
+    app['Version']='1.0.2'
     app['Description']='Training order calculator: Freedom UI calls a C# service. Calculation inputs/results are not persisted.'
     files['Files/app-descriptor.json']=encoded(app)
     with tempfile.TemporaryDirectory(prefix='creatio-package-js.') as temp:
@@ -143,7 +143,7 @@ def build(project,archive,out):
         target=package/PurePosixPath(name)
         target.parent.mkdir(parents=True,exist_ok=True)
         target.write_bytes(data)
-    zip_path=out/(PACKAGE+'-1.0.1.zip')
+    zip_path=out/(PACKAGE+'-1.0.2.zip')
     with zipfile.ZipFile(zip_path,'x',compression=zipfile.ZIP_DEFLATED) as z:
         z.writestr(PACKAGE+'.gz',compressed)
     with zipfile.ZipFile(zip_path) as z:
